@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# shellcheck source=../lib.bash
 source ../lib.bash
 
 # file_name="tut.in"
@@ -12,15 +13,15 @@ while read line
 do
     # echo "Line:" $line
     parts=()
-    for part in "$line"
+    for part in $line
     do
-        parts+=($part)
+        parts+=("$part")
     done
     # echo "First:" ${parts[0]}
     # echo "Second:" ${parts[1]}
 
-    first_col_nums+=(${parts[0]})
-    second_col_nums+=(${parts[1]})
+    first_col_nums+=("${parts[0]}")
+    second_col_nums+=("${parts[1]}")
 done < $filename
 
 counters=()
@@ -31,4 +32,4 @@ do
     counters+=($count_local)
 done
 
-echo `sum "${counters[@]}"`
+echo $(sum "${counters[@]}")
