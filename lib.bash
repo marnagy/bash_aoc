@@ -40,13 +40,15 @@ count_occurences() {
     local counter="0"
     for num in "${values[@]}";
     do
-        if [[ $num -eq $item ]];
+        # echo "Checking $item agains $num"
+        if [[ "$num" -eq "$item" ]];
         then
-            counter+=$(( counter + 1))
+            counter=$(( counter + 1 ))
         fi
+        # echo "Current counter:" "$counter"
     done
 
-    return $counter
+    echo $counter
 }
 
 # R52W7005CHB
