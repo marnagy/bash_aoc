@@ -1,14 +1,12 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 sum() {
     local result="0"
     local values=("$@")
 
-    # echo "Arguments:" $values
     for num in "${values[@]}"
     do
-        # echo $num
-        result=$(( result + num))
+        ((result+=num))
         # echo $result
     done
 
