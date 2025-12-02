@@ -4,12 +4,6 @@
 source ../../lib.bash
 regex='^\([1-9][0-9]*\)\1$'
 
-is_number_repeating() {
-    local number=$1
-
-    echo $(grep -F "$regex" <<< "$number")
-}
-
 counter=0
 while read -r -d ',' range
 do
@@ -18,13 +12,12 @@ do
     start=${nums[0]}
     end=${nums[1]}
 
-    # for i in {"$start".."$end"}
-    for i in `seq -f %1.0f "$start" "$end"`
+    
+    repeating_nums=$(seq -f %1.0f "$start" "$end" | grep "$regex")
+    # echo "Repeating numbers in range $range: $repeating_nums"
+    for val in $repeating_nums
     do
-        # echo "Number:" "$i"
-        if [ "$(is_number_repeating "$i")" ]; then
-            ((counter+=i))
-        fi
+        ((counter+=val))
     done
 done < "${1:-/dev/stdin}"
 
