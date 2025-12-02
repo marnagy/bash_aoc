@@ -5,8 +5,7 @@ regex='^\([1-9][0-9]*\)\1\+$'
 counter=0
 while read -r -d ',' range # expects "," at the end of the line
 do
-    printf "Processing %s\n" "$range" # logging
-    nums=(${range//-/ })
+    IFS=" " read -r -a nums <<< "${range//-/ }"
     start=${nums[0]}
     end=${nums[1]}
     
