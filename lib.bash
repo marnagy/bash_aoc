@@ -48,5 +48,3 @@ count_occurences() {
 
     echo $counter
 }
-
-# R52W7005CHB
