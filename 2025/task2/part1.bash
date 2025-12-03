@@ -8,7 +8,7 @@ do
     IFS=" " read -r -a nums <<< "${range//-/ }"
     start=${nums[0]}
     end=${nums[1]}
-
+    
     repeating_nums=$(seq -f %1.0f "$start" "$end" | grep "$regex")
     for val in $repeating_nums
     do
