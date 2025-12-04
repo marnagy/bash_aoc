@@ -12,7 +12,7 @@ count_neightbours() {
     do
         for dy in $neighbor_indices
         do
-            if [[ ($dx -eq 0 && $dy -eq 0) || $count -gt 4 ]]
+            if [[ ($dx -eq 0 && $dy -eq 0) || $count -ge 4 ]]
             then
                 continue
             fi
@@ -37,41 +37,32 @@ lines=()
 i=0
 while read -r line
 do
-    # echo "Loading line $i"
     lines+=("$line")
-    # echo "${lines[$i]}"
     ((i++))
 done < "${1:-/dev/stdin}"
 
-# rolls_counter=0
-# echo "All lines: ${lines[@]}"
 line_length=${#lines[0]}
 lines_amount=${#lines[@]}
 line_indices=$(seq 0 $((lines_amount - 1)))
 removed_total=0
-
 while true
 do
     new_lines=()
     removed_in_iter=0
     for line_idx in $line_indices
     do
-        echo "Processing line $((line_idx+1))/${lines_amount} ..." >> /dev/stderr
+        # echo "Processing line $((line_idx+1))/${lines_amount} ..." >> /dev/stderr
         new_line=""
         for ((i=0; i<line_length; i++))
         do
-            # echo "Processing index [$line_idx;$i] ..."
-            # echo "Processing index $((i+1))/${line_length}"
             char=${lines[$line_idx]:$i:1}
             if [[ $char != "@" ]]
             then
                 new_line+=$char
                 continue
             fi
-            # echo "Character: $char"
 
             neighbour_count=$(count_neightbours $line_idx $i)
-            # echo "Neighbour count: $neighbour_count"
 
             if [[ $neighbour_count -lt 4 ]]
             then
@@ -83,7 +74,6 @@ do
 
         done
         new_lines+=("$new_line")
-        # printf "Current rolls counter: %s\n\n" "$rolls_counter" >> /dev/stderr
     done
     echo "Removed in iter: $removed_in_iter" >> /dev/stderr
     ((removed_total+=removed_in_iter))
