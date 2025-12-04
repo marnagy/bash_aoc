@@ -13,10 +13,10 @@ do
     do
         # split digits into separate lines
         digits=$(echo -n "$remaining_line" | sed -e 's/\(.\)/\1\n/g')
-        # use `ghead` instead of `head`` for compatibility with macOS
+        # use `ghead` instead of `head` for compatibility with macOS
         max_num=$(ghead -n "-$((batteries_remaining - 1))" <<< "$digits" | sort -nr | head -n 1)
         # sed magic I don't fully understand (https://unix.stackexchange.com/a/707343)
-        max_num_index=$(sed  "/^$max_num$/=;d" <<< "$digits" | head -n 1)
+        max_num_index=$(sed "/^$max_num$/=;d" <<< "$digits" | head -n 1)
 
         # update step
         remaining_line="${remaining_line:$((max_num_index))}"
