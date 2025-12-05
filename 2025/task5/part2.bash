@@ -2,7 +2,6 @@
 
 all_intervals=()
 
-counter=0
 ranges_loaded=false
 while read -r line
 do
@@ -14,28 +13,16 @@ do
 
     if ! $ranges_loaded
     then
-            nums=(${line//-/ })
-            low_ranges+=("${nums[0]}")
-            high_ranges+=("${nums[1]}")
-
         all_intervals+=("$line")
-        # echo "All intervals: ${all_intervals[@]}" > /dev/stderr
     fi
 
 done < "${1:-/dev/stdin}"
 
-echo "All intervals: ${all_intervals[@]}" > /dev/stderr
-
-echo "After sort"
-
 sorted_intervals=($(echo "${all_intervals[@]}" | tr ' ' '\n' | sort -n -t "-" -k1 | tr '\n' ' '))
-# echo "${sorted_intervals[@]}" > /dev/stderr
-
 
 i=0
 while (( i < ${#sorted_intervals[@]} ))
 do
-    echo "Merging iteration $i" > /dev/stderr
     if [[ $i -eq $((${#sorted_intervals[@]} - 1)) ]]
     then
         break

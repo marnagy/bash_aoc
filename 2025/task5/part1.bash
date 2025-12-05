@@ -39,6 +39,4 @@ do
     fi
 done < "${1:-/dev/stdin}"
 
-
-
 echo "Fresh counter: $counter"
