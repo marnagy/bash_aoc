@@ -1,29 +1,6 @@
 #!/bin/bash
 
-low_ranges=()
-high_ranges=()
-
-min() {
-    local values=("$@")
-    local min_value=${values[0]}
-    for value in "${values[@]}"; do
-        if (( value < min_value )); then
-            min_value=$value
-        fi
-    done
-    echo "$min_value"
-}
-
-max() {
-    local values=("$@")
-    local max_value=${values[0]}
-    for value in "${values[@]}"; do
-        if (( value > min_value )); then
-            min_value=$value
-        fi
-    done
-    echo "$min_value"
-}
+all_intervals=()
 
 counter=0
 ranges_loaded=false
@@ -32,48 +9,67 @@ do
     if [[ "$line" = "" ]]
     then
         ranges_loaded=true
-        break
+        continue
     fi
 
     if ! $ranges_loaded
     then
-        nums=(${line//-/ })
-        low_ranges+=("${nums[0]}")
-        high_ranges+=("${nums[1]}")
-        continue
+            nums=(${line//-/ })
+            low_ranges+=("${nums[0]}")
+            high_ranges+=("${nums[1]}")
+
+        all_intervals+=("$line")
+        # echo "All intervals: ${all_intervals[@]}" > /dev/stderr
     fi
+
 done < "${1:-/dev/stdin}"
 
-min_id=$(min "${low_ranges[@]}")
-max_id=$(max "${high_ranges[@]}")
+echo "All intervals: ${all_intervals[@]}" > /dev/stderr
 
-echo "Min ID: $min_id"
-echo "Max ID: $max_id"
+echo "After sort"
 
-size=$((max_id - min_id + 1))
+sorted_intervals=($(echo "${all_intervals[@]}" | tr ' ' '\n' | sort -n -t "-" -k1 | tr '\n' ' '))
+# echo "${sorted_intervals[@]}" > /dev/stderr
 
-for ((num=0; num<=size; num++))
+
+i=0
+while (( i < ${#sorted_intervals[@]} ))
 do
-    id=$((min_id + num))
-    echo "Checking ID $id [$((num+1))/$size]"
-    found=false
-    for i in $(seq 0 $((${#low_ranges[@]} - 1)))
-    do
-        # echo "I: $i"
-        low=${low_ranges[$i]}
-        high=${high_ranges[$i]}
-        if [[ $id -ge $low && $id -le $high ]]
-        then
-            # echo "ID $id is in range $low-$high"
-            found=true
-            break
-        fi
-    done
-
-    if $found
+    echo "Merging iteration $i" > /dev/stderr
+    if [[ $i -eq $((${#sorted_intervals[@]} - 1)) ]]
     then
-        ((counter++))
+        break
+    fi
+
+    interval1=(${sorted_intervals[$i]//-/ })
+    interval1_low="${interval1[0]}"
+    interval1_high="${interval1[1]}"
+    interval2=(${sorted_intervals[$((i + 1))]//-/ })
+    interval2_low="${interval2[0]}"
+    interval2_high="${interval2[1]}"
+
+    if (( interval1_high >= interval2_low - 1 ))
+    then
+        if (( interval1_high <= interval2_high ))
+        then
+            # Merge intervals
+            sorted_intervals[$i]="${interval1_low}-${interval2_high}"
+        fi
+        # Remove interval2
+        sorted_intervals=("${sorted_intervals[@]:0:$((i+1))}" "${sorted_intervals[@]:$((i + 2))}")
+    else
+        ((i++))
     fi
 done
 
-echo "Fresh counter: $counter"
+ids_counter=0
+for interval in "${sorted_intervals[@]}"
+do
+    nums=(${interval//-/ })
+    low="${nums[0]}"
+    high="${nums[1]}"
+
+    ((ids_counter+=high-low+1))
+done
+
+echo "Total merged intervals count: $ids_counter"
