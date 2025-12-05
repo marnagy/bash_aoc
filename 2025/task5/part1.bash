@@ -1,6 +1,5 @@
 #!/bin/bash
 
-# string with fresh IDs on each line
 low_ranges=()
 high_ranges=()
 
