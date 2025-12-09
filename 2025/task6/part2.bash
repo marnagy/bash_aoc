@@ -3,60 +3,86 @@
 filename="$1"
 
 ## Read input file and remember at what indices are the "space columns".
-space_indices=()
+space_indices=""
 master_counter=0
 while IFS='\n' read -r line
 do
+    # add space at the end so we can split line later more effectively
     line+=" "
-    if [[ "${#space_indices[@]}" -eq 0 ]]
+    if [[ "${#space_indices}" -eq 0 ]]
     then
-        echo "Adding all indices as space indices." > /dev/stderr
-        space_indices=("$(seq 0 $(( ${#line})) | tr '\n' ' ')")
+        # echo "Adding all indices as space indices." > /dev/stderr
+        space_indices="$(seq 0 $(( ${#line} - 1)) )"
     fi
 
-    echo "Space indices: ${space_indices[@]}" > /dev/stderr
-    
-    for (( i=0; i<"${#line}"; i++ ))
+
+    for ((i=0; i<"${#line}"; i++))
     do
-        # echo "Testing character '${line:i:1}' at index $i" > /dev/stderr
-        if [[ "${line:i:1}" != " " ]]
+        # echo "Comparing char" "${line:$i:1}" > /dev/stderr
+        if [[ "${line:$i:1}" != " " ]]
         then
-            echo "Removing index $i from space indices." > /dev/stderr
-            space_indices=("${space_indices[@]/$i}")
+            space_indices=$(grep -v "^$i$" <<< "$space_indices")
         fi
-        # echo "Char: '${line:i:1}' at index $i" > /dev/stderr
     done
-    echo "Space indices: ${space_indices[@]}" > /dev/stderr
+
+    # echo "Space indices:" "$(tr '\n' ' ' <<< "$space_indices")" > /dev/stderr
 done < "$filename"
 
-echo "Indices loaded before truncating: ${space_indices[@]}" > /dev/stderr
+# echo "Indices loaded: ${space_indices}" > /dev/stderr
 
-space_indices=( $(tr -s " " <<< "${space_indices[@]}") )
+space_indices=( $(tr "\n" " " <<< "$space_indices") )
 
-echo "Indices loaded: ${space_indices[@]}" > /dev/stderr
+echo "Transformed into array:" "${space_indices[@]}" > /dev/stderr
 
-# split file into temp file for each column
 while IFS='\n' read -r line
 do
-    echo "Processing line: '$line'" > /dev/stderr
-    current_indices_index=0
-    for (( i=0; i<"${#line}"; i++ ))
-    do
-        echo "Comparing index $i with space index ${space_indices[$current_indices_index]}" > /dev/stderr
-        if [[ "$i" -lt "${space_indices[$current_indices_index]}" ]]
-        then
-        upper_bound=${space_indices[$current_indices_index]}
-        else
-            upper_bound=${#line}
-        fi
-            col_digit_idx=$((i - ${space_indices[$((current_indices_index - 1))]} - 1))
-            echo "${line:i:1}" >> "numcol_${current_indices_index}_col_${col_digit_idx}.tmp"
-        else
-            ((current_indices_index++))
-        fi
-    done
-done < "$filename"
+    line+=" "
+    if grep "^[0-9 ]\+$" <<< "$line"
+    then
+        next_space_index=0
+        for ((line_index=0; line_index<"${#line}"; line_index++))
+        do
+            # echo "Comparing char '${line:$line_index:1}' col ${next_space_index}" > /dev/stderr
+            if [[ "$line_index" -lt "${space_indices[$next_space_index]}" ]]
+            then
+                # echo "$line_index < ${space_indices[$next_space_index]}" > /dev/stderr
+                digit="${line:$line_index:1}"
+                if [[ "$digit" == " " ]]
+                then
+                    continue
+                fi
+                echo -n "$digit" >> "col_${next_space_index}_idx_${line_index}.tmp"
+            else
+                # echo "Same index!" > /dev/stderr
+                ((next_space_index++))
+            fi
+        done
+        echo "" > /dev/stderr
+    else
+        # echo "OP line" > /dev/stderr
+        operations=$(tr -s " " <<< "$line")
 
-echo "Master counter:" "$master_counter"
+        col_idx=0
+        for op in "$(tr " " "\n" <<< "$operations")"
+        do
+            echo "OP: ${op}" > /dev/stderr
+            for file in col_${col_idx}_idx_*.tmp
+            do
+                content="$(<"$file")"
+                echo "File content: ${content}" > /dev/stderr
+            done
+            ((col_idx++))
+        done
+        # col_idx=0
+        # for ((i=0; i<"${#operations}"; i++))
+        # do
+        #     echo "Char:" "${operations:$i}" > /dev/null
+        # done
+        # for tmp_filename in ./*.tmp
+        # do
+        #     echo "" >> "$tmp_filename"
+        # done
+    fi
+done < "$filename"
 
 # rm ./*.tmp 2> /dev/null && echo "All temp files removed."
