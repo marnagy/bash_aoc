@@ -63,26 +63,32 @@ do
         operations=$(tr -s " " <<< "$line")
 
         col_idx=0
-        for op in "$(tr " " "\n" <<< "$operations")"
+        while IFS=" " read -r op
         do
-            echo "OP: ${op}" > /dev/stderr
+            # echo "OP: ${op}" > /dev/stderr
+            local_counter=0
+            if [[ "$op" == "*" ]]
+            then
+                local_counter=1
+            fi
             for file in col_${col_idx}_idx_*.tmp
             do
+                # echo "Filename: ${file}" > /dev/stderr
                 content="$(<"$file")"
-                echo "File content: ${content}" > /dev/stderr
+                # echo "File content: ${content}" > /dev/stderr
+                if [[ "$op" == "+" ]]
+                then
+                    ((local_counter+=content))
+                else
+                    ((local_counter*=content))
+                fi 
             done
+            ((master_counter+=local_counter))
             ((col_idx++))
-        done
-        # col_idx=0
-        # for ((i=0; i<"${#operations}"; i++))
-        # do
-        #     echo "Char:" "${operations:$i}" > /dev/null
-        # done
-        # for tmp_filename in ./*.tmp
-        # do
-        #     echo "" >> "$tmp_filename"
-        # done
+        done <<< "$(tr " " "\n" <<< "$operations")"
     fi
 done < "$filename"
 
-# rm ./*.tmp 2> /dev/null && echo "All temp files removed."
+echo "Final count: ${master_counter}" > /dev/stderr
+
+rm ./*.tmp 2> /dev/null && echo "All temp files removed."
