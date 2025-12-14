@@ -14,9 +14,8 @@ find_indices() {
 }
 
 recursive_step() {
-    local current_counter=$1
-    local line_index=$2
-    local char_index=$3
+    local line_index=$1
+    local char_index=$2
 
     # echo "Recursive step from ${line_index}:${char_index}" >> /dev/stderr
     # echo "Current index: ${current_counter}" >> /dev/stderr
@@ -26,9 +25,7 @@ recursive_step() {
 
     if ! [[ -f "line_${line_index}.tmp" ]]
     then
-        # echo "File 'line_${line_index}.tmp' does not exist." >> /dev/stderr
-        new_counter=$((current_counter + 1))
-        # echo "Increasing counter to ${new_counter}" >> /dev/stderr
+        new_counter=1
         echo "${new_counter}"
         return
     fi
@@ -41,14 +38,14 @@ recursive_step() {
     
     if [[ "${current_char}" != "^" ]]
     then
-        recursive_step "$current_counter" "$((line_index + 1))" "$char_index"
+        recursive_step "$((line_index + 1))" "$char_index"
         return
     fi
 
-    counter_after1=$(recursive_step "$current_counter" "$((line_index + 1))" "$((char_index + 1))")
-    counter_after2=$(recursive_step "$counter_after1" "$((line_index + 1))" "$((char_index - 1))")
+    counter_after1=$(recursive_step "$((line_index + 1))" "$((char_index + 1))")
+    counter_after2=$(recursive_step "$((line_index + 1))" "$((char_index - 1))")
 
-    echo "${counter_after2}"
+    echo "$(( counter_after1 + counter_after2 ))"
 }
 
 ## Solve using DFS (how the hell do I implement DFS in Bash??)
@@ -71,7 +68,7 @@ start_beam_index=$(find_indices "S" "$first_line")
 line_index=0
 char_index=$start_beam_index
 
-recursive_step 0 0 "$char_index"
+recursive_step 0 "$char_index"
 
 rm ./*.tmp
 
