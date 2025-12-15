@@ -17,17 +17,10 @@ recursive_step() {
     local line_index=$1
     local char_index=$2
 
-    # echo "Recursive step from ${line_index}:${char_index}" >> /dev/stderr
-    # echo "Current index: ${current_counter}" >> /dev/stderr
-    # echo "Current file line_${line_index}.tmp" >> /dev/stderr
-
-    # test -e "line_${line_index}.tmp"
-
     # check cache
     if [[ -f "cache_${line_index}_${char_index}.tmp" ]]
     then
         cached_value=$(<"cache_${line_index}_${char_index}.tmp")
-        # echo "Cache hit for ${line_index}:${char_index} with value ${cached_value}" >> /dev/stderr
         echo "${cached_value}"
         return
     fi
@@ -39,31 +32,29 @@ recursive_step() {
         return
     fi
 
-    # if not split, recurse further
-    # echo "Reading file line_${line_index}.tmp" >> /dev/stderr
     current_line=$(<"line_${line_index}.tmp")
     current_char=${current_line:$char_index:1}
-    # echo "Current char: ${current_char}" >> /dev/stderr
     
+    # if not split, recurse further down
     if [[ "${current_char}" != "^" ]]
     then
         recursive_step "$((line_index + 1))" "$char_index"
         return
     fi
 
+    # if split, recurse both ways and sum
     counter_after1=$(recursive_step "${line_index}" "$((char_index + 1))")
     counter_after2=$(recursive_step "${line_index}" "$((char_index - 1))")
     summed=$(( counter_after1 + counter_after2 ))
 
+    # save to "cache"
     echo "${summed}" > cache_${line_index}_${char_index}.tmp
 
     echo "${summed}"
 }
 
-## Solve using DFS (how the hell do I implement DFS in Bash??)
-
-# save each line to file with corresponding line index
-
+## Solve using DFS + memoization (caching)
+# save each line to file with corresponding line index (makeshift dictionary)
 line_index=0
 while read -r line
 do
@@ -75,12 +66,11 @@ done < "${1:-/dev/stdin}"
 first_line=$(<"line_0.tmp")
 start_beam_index=$(find_indices "S" "$first_line")
 
-# echo "Start beam index: ${start_beam_index}" > /dev/stderr
-
 line_index=0
 char_index=$start_beam_index
 
 recursive_step 0 "$char_index"
 
+# cleanup cache and temp files
 rm ./*.tmp
 
