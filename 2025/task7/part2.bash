@@ -23,6 +23,15 @@ recursive_step() {
 
     # test -e "line_${line_index}.tmp"
 
+    # check cache
+    if [[ -f "cache_${line_index}_${char_index}.tmp" ]]
+    then
+        cached_value=$(<"cache_${line_index}_${char_index}.tmp")
+        # echo "Cache hit for ${line_index}:${char_index} with value ${cached_value}" >> /dev/stderr
+        echo "${cached_value}"
+        return
+    fi
+
     if ! [[ -f "line_${line_index}.tmp" ]]
     then
         new_counter=1
@@ -42,10 +51,13 @@ recursive_step() {
         return
     fi
 
-    counter_after1=$(recursive_step "$((line_index + 1))" "$((char_index + 1))")
-    counter_after2=$(recursive_step "$((line_index + 1))" "$((char_index - 1))")
+    counter_after1=$(recursive_step "${line_index}" "$((char_index + 1))")
+    counter_after2=$(recursive_step "${line_index}" "$((char_index - 1))")
+    summed=$(( counter_after1 + counter_after2 ))
 
-    echo "$(( counter_after1 + counter_after2 ))"
+    echo "${summed}" > cache_${line_index}_${char_index}.tmp
+
+    echo "${summed}"
 }
 
 ## Solve using DFS (how the hell do I implement DFS in Bash??)
