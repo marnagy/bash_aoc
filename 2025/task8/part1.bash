@@ -27,6 +27,7 @@ compute_distance() {
 line_index=0
 while read -r line
 do
+    node_index="$line_index"
     echo "Current line: ${line}" >> /dev/stderr
     IFS=',' read -r -a nums <<< "$line"
     echo "Nums: ${nums[@]}" >> /dev/stderr
@@ -34,7 +35,13 @@ do
     echo "Num1: ${nums[1]}" >> /dev/stderr
     echo "Num1: ${nums[2]}" >> /dev/stderr
 
-    echo -n "${nums[@]}" > "num_${line_index}.tmp"
+    # save node coords
+    echo -n "${nums[@]}" > "num_${node_index}.tmp"
+    # save node -> cluster_id (default: node_id)
+    echo -n "${node_index}" > "node_${node_index}_to_cluster_id.tmp"
+    # save nodes for the given cluster
+    echo -n "${node_index}" > "cluster_${node_index}.tmp"
+
     ((line_index++))
 done < "${1:-/dev/stdin}"
 
@@ -65,14 +72,36 @@ do
     done
 done
 
-for line in $(sort -rn -t "," -k3,3 "distances.csv.tmp" | head -n 5)
+max_connected_nodes=10
+current_node_pairs_connected=0
+while read -r line
 do
+    echo "Current node pairs connected count: ${current_node_pairs_connected}" >> /dev/stderr
+    if ( current_node_pairs_connected >= max_connected_nodes )
+    then
+        echo "Enough pairs connected."
+        break
+    fi
+
     IFS=',' read -r -a pair_values <<< "$line"
 
     echo "Reading coords with index ${pair_values[0]}" >> /dev/stderr
     IFS=' ' read -r -a num1_nums < "num_${pair_values[0]}.tmp"
     echo "Reading coords with index ${pair_values[1]}" >> /dev/stderr
     IFS=' ' read -r -a num2_nums < "num_${pair_values[1]}.tmp"
-done
+
+    # get cluster_id for node1
+    # get cluster_id for node2
+
+    # if cluster_id1 == cluster_id2 then continue
+
+    ## merge cluster2 into cluster1:
+    # for node in cluster2.nodes:
+    #   rewrite cluster_id for node to cluster_id1
+    # add cluster2.nodes to cluster1.nodes' file
+    # remove cluster2.nodes file
+
+    ((current_node_pairs_connected++))
+done <<< "$(sort -rn -t "," -k3,3 "distances.csv.tmp")"
 
 # rm ./*.tmp && echo "Deleted .tmp files" >> /dev/stderr
