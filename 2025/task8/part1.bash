@@ -139,7 +139,7 @@ do
 done <<< "$(sort -n -t "," -k3,3 "distances.csv.tmp")"
 
 echo "Current cluster count:" >> /dev/stderr
-ls | grep -c "^cluster" >> /dev/stderr
+echo cluster*.tmp | wc -l >> /dev/stderr
 
 # get sizes of all clusters, sort by #lines and multiply top 3
 
@@ -166,5 +166,6 @@ do
 done <<< "$(sort -nr -t "," -k2,2 "cluster_sizes.csv.tmp" | head -n 3)"
 
 echo "Final counter: $counter" >> /dev/stderr
+echo "Final counter: $counter" > "result.txt"
 
 # rm ./*.tmp && echo "Deleted .tmp files" >> /dev/stderr
