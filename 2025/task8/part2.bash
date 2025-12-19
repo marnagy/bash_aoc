@@ -31,7 +31,7 @@ get_cluster_id() {
 }
 
 get_current_cluster_count() {
-    ls -l | grep -c "bash$"
+    ls -al | grep -c " cluster"
 }
 
 line_index=0
@@ -65,12 +65,12 @@ for ((i=0; i<=line_index; i++))
 do
     echo "Saving distance of index ${i}/${line_index} to file..." >> /dev/stderr
     # start_j=$((i + 1))
+    IFS=' ' read -r -a num1_nums < "num_${i}.tmp"
     for ((j=i+1; j<=line_index; j++))
     do
         # echo "Saving distance index pair ${i}-${j} to file..." >> /dev/stderr
         # echo "Coords: ${i}-${j}" >> /dev/stderr
 
-        IFS=' ' read -r -a num1_nums < "num_${i}.tmp"
         IFS=' ' read -r -a num2_nums < "num_${j}.tmp"
 
         # echo "Nums1: ${num1_nums[*]}" >> /dev/stderr
@@ -94,22 +94,17 @@ current_node_pairs_connected=0
 while read -r line
 do
     # echo "Current node pairs connected count: ${current_node_pairs_connected}" >> /dev/stderr
-    if ! [[ "$current_node_pairs_connected" -lt "$max_connected_nodes" ]]
-    then
-        echo "Enough pairs connected."
-        break
-    fi
+    cluster_counter=$(get_current_cluster_count)
+    echo "Current cluster count: $cluster_counter" >> /dev/stderr
+    # if ! [[ "$current_node_pairs_connected" -lt "$max_connected_nodes" ]]
+    # then
+    #     echo "Enough pairs connected."
+    #     break
+    # fi
 
     IFS=',' read -r -a pair_values <<< "$line"
     node_id1="${pair_values[0]}"
     node_id2="${pair_values[1]}"
-
-    ## echo "Reading coords with index ${node_id1}" >> /dev/stderr
-    IFS=' ' read -r -a num1_nums < "num_${node_id1}.tmp"
-    # echo "Node1 coords: ${num1_nums[*]}" >> /dev/stderr
-    ## echo "Reading coords with index ${node_id2}" >> /dev/stderr
-    IFS=' ' read -r -a num2_nums < "num_${node_id2}.tmp"
-    # echo "Node2 coords: ${num2_nums[*]}" >> /dev/stderr
 
     # get cluster_id for node1
     cluster_id1=$(get_cluster_id "$node_id1")
@@ -121,6 +116,20 @@ do
     then
         ((current_node_pairs_connected++))    
         continue
+    fi
+
+    ## echo "Reading coords with index ${node_id1}" >> /dev/stderr
+    IFS=' ' read -r -a num1_nums < "num_${node_id1}.tmp"
+    # echo "Node1 coords: ${num1_nums[*]}" >> /dev/stderr
+    ## echo "Reading coords with index ${node_id2}" >> /dev/stderr
+    IFS=' ' read -r -a num2_nums < "num_${node_id2}.tmp"
+    # echo "Node2 coords: ${num2_nums[*]}" >> /dev/stderr
+
+    if [[ "$cluster_counter" -eq 2 ]]
+    then
+        res=$(( num1_nums[0] * num2_nums[0] ))
+        echo "Final product: $res" >> /dev/stderr
+        break
     fi
 
     # echo "Merging clusters ${cluster_id1} and ${cluster_id2}" >> /dev/stderr
