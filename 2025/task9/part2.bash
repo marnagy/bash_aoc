@@ -33,24 +33,16 @@ do
     ((line_index++))
 done < "${1:-/dev/stdin}"
 
+
+echo "Drawing map..." >> /dev/stderr
 current_max_area=0
 for ((i=0; i<line_index; i++))
 do
-    echo "Computing areas for index $i" >> /dev/stderr
-    for ((j=i+1; j<line_index; j++))
-    do
-        IFS=',' read -r -a point1_nums < "point_${i}.tmp"
-        IFS=',' read -r -a point2_nums < "point_${j}.tmp"
-
-        area=$(compute_area "${point1_nums[0]}" "${point1_nums[1]}" "${point2_nums[0]}" "${point2_nums[1]}")
-
-        if [[ "$area" -gt "$current_max_area" ]]
-        then
-            current_max_area="$area"
-        fi
-    done
+    echo
 done
 
 rm ./*.tmp
+
+# the rectangle is inside if all points on the perimeter of it are inside.
 
 echo "Max area found: ${current_max_area}" >> /dev/stderr
