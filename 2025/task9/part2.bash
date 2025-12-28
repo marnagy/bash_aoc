@@ -74,9 +74,9 @@ create_line() {
         for ((current_coord=1; current_coord<coord_diff; current_coord++))
         do
             local green_point_coords=("" "")
-            green_point_coords[$other_coord_index]="$const_coord"
+            green_point_coords[other_coord_index]="$const_coord"
             local green_point_num=$(( point1_nums[coord_index] - current_coord ))
-            green_point_coords[$coord_index]="$green_point_num"
+            green_point_coords[coord_index]="$green_point_num"
             echo "Green point coords: ${green_point_coords[*]}" >> /dev/stderr
             create_green_point "${green_point_coords[@]}"
         done
@@ -85,9 +85,9 @@ create_line() {
         for ((current_coord=1; current_coord<-coord_diff; current_coord++))
         do
             local green_point_coords=("" "")
-            green_point_coords[$other_coord_index]="$const_coord"
+            green_point_coords[other_coord_index]="$const_coord"
             local green_point_num=$(( point1_nums[coord_index] + current_coord ))
-            green_point_coords[$coord_index]="$green_point_num"
+            green_point_coords[coord_index]="$green_point_num"
             echo "Green point coords: ${green_point_coords[*]}" >> /dev/stderr
             # echo "Green point coords: Var coord: ${green_point_num} Const coord: ${const_coord}" >> /dev/stderr
             create_green_point "${green_point_coords[@]}"
@@ -96,10 +96,16 @@ create_line() {
 }
 
 line_index=0
+max_horizontal_coord=0
 while read -r line
 do
     echo -n "$line" > "index_${line_index}.tmp"
     IFS=',' read -r -a coords <<< "$line"
+
+    if [[ "${coords[0]}" -gt "$max_horizontal_coord" ]]
+    then
+        max_horizontal_coord="${coords[0]}"
+    fi
 
     create_red_point "${coords[0]}" "${coords[1]}"
 
@@ -120,8 +126,11 @@ do
     create_line "$i" "$next_point_index"
 done
 
-# rm ./*.tmp
+# go over horizontal lines to "fill-in" points in between points
+
+
 
 # the rectangle is inside if all points on the perimeter of it are inside.
 
 # echo "Max area found: ${current_max_area}" >> /dev/stderr
+# rm ./*.tmp
