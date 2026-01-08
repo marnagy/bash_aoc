@@ -39,6 +39,13 @@ create_green_point() {
     echo -n "GREEN" > "point_${x}_${y}.tmp"
 }
 
+create_green_point_inside() {
+    local x=$1
+    local y=$2
+
+    echo -n "GREEN_INSIDE" > "point_${x}_${y}.tmp"
+}
+
 create_line() {
     local point1_index=$1
     local point2_index=$2
@@ -53,8 +60,7 @@ create_line() {
     # for each point that is not RED, create a file with "LINE"
     local coord_index=0 # horizontal
     local other_coord_index=1
-    if [[ "${point1_nums[0]}" -eq "${point2_nums[0]}" ]]
-    then
+    if [[ "${point1_nums[0]}" -eq "${point2_nums[0]}" ]]; then
         coord_index=1
         other_coord_index=0
     fi
@@ -68,11 +74,9 @@ create_line() {
     echo "Coord diff: ${coord_diff}" >> /dev/stderr
 
     local current_coord=0
-    if [[ "$coord_diff" -gt 0 ]]
-    then
+    if [[ "$coord_diff" -gt 0 ]]; then
         # echo "Positive coord diff" >> /dev/stderr
-        for ((current_coord=1; current_coord<coord_diff; current_coord++))
-        do
+        for ((current_coord=1; current_coord<coord_diff; current_coord++)); do
             local green_point_coords=("" "")
             green_point_coords[other_coord_index]="$const_coord"
             local green_point_num=$(( point1_nums[coord_index] - current_coord ))
@@ -82,8 +86,7 @@ create_line() {
         done
     else
         # echo "Negative coord diff" >> /dev/stderr
-        for ((current_coord=1; current_coord<-coord_diff; current_coord++))
-        do
+        for ((current_coord=1; current_coord<-coord_diff; current_coord++)); do
             local green_point_coords=("" "")
             green_point_coords[other_coord_index]="$const_coord"
             local green_point_num=$(( point1_nums[coord_index] + current_coord ))
@@ -96,15 +99,18 @@ create_line() {
 }
 
 line_index=0
-max_horizontal_coord=0
-while read -r line
-do
+max_first_coord=0
+max_second_coord=0
+while read -r line; do
     echo -n "$line" > "index_${line_index}.tmp"
     IFS=',' read -r -a coords <<< "$line"
 
-    if [[ "${coords[0]}" -gt "$max_horizontal_coord" ]]
-    then
-        max_horizontal_coord="${coords[0]}"
+    if [[ "${coords[0]}" -gt "$max_first_coord" ]]; then
+        max_first_coord="${coords[0]}"
+    fi
+
+    if [[ "${coords[1]}" -gt "$max_second_coord" ]]; then
+        max_second_coord="${coords[1]}"
     fi
 
     create_red_point "${coords[0]}" "${coords[1]}"
@@ -114,11 +120,9 @@ done < "${1:-/dev/stdin}"
 
 
 echo "Connecting red points..." >> /dev/stderr
-for ((i=0; i<line_index; i++))
-do
+for ((i=0; i<line_index; i++)); do
     next_point_index=$((i+1))
-    if [[ "$next_point_index" -eq "$line_index" ]]
-    then
+    if [[ "$next_point_index" -eq "$line_index" ]]; then
         next_point_index=0
     fi
 
@@ -127,7 +131,16 @@ do
 done
 
 # go over horizontal lines to "fill-in" points in between points
+echo "Filling in the shape..."
+for ((i=1; i<=max_first_coord; i++)); do
+    echo "Line ${i}/${max_first_coord}" >> /dev/stderr
+    is_inside=0 # 0=no 1=yes
+    for ((j=1; j<=max_second_coord; j++)); do
+        echo "Processing [$i;$j]" >> /dev/stderr
 
+        if [[ "$is_inside" -eq 0 &&  ]]
+    done
+done
 
 
 # the rectangle is inside if all points on the perimeter of it are inside.
